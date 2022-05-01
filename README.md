@@ -17,6 +17,7 @@ Modal keyboard-driven virtual pointer.
  gcc -o bmkvp -I. bmkvp.c -lX11 -lXtst
  ```
  Also, in order for `bmkvp` to run properly, you need a desktop compositor(e.g. `compton`). Without one, bmkvp's background will be a solid black color, as there is no way to display RGBA color.
+ To install it, you want to move `bmkvp` to `/bin` and set a key combination in order to launch it on the fly(this can be easily done through your desktop environment's settings).
  
  ## Controls
  The default controls are based on your keyboard's numpad:
@@ -47,6 +48,12 @@ Modal keyboard-driven virtual pointer.
  - ![How to set Xlib window background transparent?](https://stackoverflow.com/questions/23051594/how-to-set-xlib-window-background-transparent)
  
  > I wanted to publish my resources, as Xlib is pretty poorly documented online and I know that it will help the people interested in learning Xlib.
+ 
+ ## To-do
+ - override window manager's attributes(in order to remove window decorations)
+ - simulate left-click
+ - focus on `bmkvp` once launched (related to wm's overriding)
+ - warp in quadrants, not based on *precision*
  
  ## License
  `bmkvp` is licensed under the MIT License. To learn more about it, see ![LICENSE](https://github.com/datcuandrei/bmkvp/blob/main/LICENSE).
