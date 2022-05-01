@@ -34,18 +34,18 @@ Modal keyboard-driven virtual pointer.
 
  ## Customization
  If you want to customize bmkvp, you can do so by accessing the source code.
- The user configurable space is located @ ![line 33](https://github.com/datcuandrei/bmkvp/blob/4d7b8d55af5ed4b313268fca43c7be66a6986c13/bmkvp.c#L33) and you can change the controls, precision of the pointer grid, transparency and color. The code is easily editable, so you can go even further with customizing it.
+ The user configurable space is located @ [line 33](https://github.com/datcuandrei/bmkvp/blob/4d7b8d55af5ed4b313268fca43c7be66a6986c13/bmkvp.c#L33) and you can change the controls, precision of the pointer grid, transparency and color. The code is easily editable, so you can go even further with customizing it.
  You need to recompile bmkvp in order for the modifications to apply.
  
  ## Thanks
  This project was inspired by: 
- - ![warpd](https://github.com/rvaiya/warpd)
+ - [warpd](https://github.com/rvaiya/warpd)
  
  Also, this project was done with the help of the following resources:
- - ![Xlib Online Manual](https://tronche.com/gui/x/xlib/)
- - ![Xlib Tutorial](http://xopendisplay.hilltopia.ca/2009/Jan/Xlib-tutorial-part-1----Beginnings.html)
- - ![XTest Extension](https://www.x.org/releases/X11R7.7/doc/libXtst/xtestlib.html#References)
- - ![How to set Xlib window background transparent?](https://stackoverflow.com/questions/23051594/how-to-set-xlib-window-background-transparent)
+ - [Xlib Online Manual](https://tronche.com/gui/x/xlib/)
+ - [Xlib Tutorial](http://xopendisplay.hilltopia.ca/2009/Jan/Xlib-tutorial-part-1----Beginnings.html)
+ - [XTest Extension](https://www.x.org/releases/X11R7.7/doc/libXtst/xtestlib.html#References)
+ - [How to set Xlib window background transparent?](https://stackoverflow.com/questions/23051594/how-to-set-xlib-window-background-transparent)
  
  > I wanted to publish my resources, as Xlib is pretty poorly documented online and I know that it will help the people interested in learning Xlib.
  
@@ -56,4 +56,4 @@ Modal keyboard-driven virtual pointer.
  - warp in quadrants, not based on *precision*
  
  ## License
- `bmkvp` is licensed under the MIT License. To learn more about it, see ![LICENSE](https://github.com/datcuandrei/bmkvp/blob/main/LICENSE).
+ `bmkvp` is licensed under the MIT License. To learn more about it, see [LICENSE](https://github.com/datcuandrei/bmkvp/blob/main/LICENSE).
