@@ -56,7 +56,7 @@ Default controls(Numpad):
 
  ## Customization
  If you want to customize bmkvp, you can do so by accessing the source code.
- The user configurable space is located @ [line 33](https://github.com/datcuandrei/bmkvp/blob/4d7b8d55af5ed4b313268fca43c7be66a6986c13/bmkvp.c#L33) and you can change the controls, precision of the pointer grid, transparency and color. The code is easily editable, so you can go even further with customizing it.
+ The user configurable space is located @ [line 41](https://github.com/datcuandrei/bmkvp/blob/bc32ac69084c8753be9cfa4a318411be0eae0dbe/bmkvp.c#L41) and you can change the controls, precision of the pointer grid, transparency and color. The code is easily editable, so you can go even further with customizing it.
  You need to recompile bmkvp in order for the modifications to apply.
  
  ## Thanks
