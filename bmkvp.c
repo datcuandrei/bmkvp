@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <time.h>
 
 #include <X11/Xlib.h>
@@ -30,9 +31,15 @@
 #include <X11/Xresource.h>
 #include <X11/extensions/XTest.h>
 
+#define VERSION "0.5"
+
+/* DO NOT EDIT i ->*/
+#define LEFT_CLICK 1
+#define RIGHT_CLICK 3
+/* <- */
+
 /* CONFIGURE BMKVP */
 #define COLOR 0x89cff0		// hex code for "baby blue".
-#define mod 20			// the precision of the grid.
 
 /* controls */
 #define UP '8'
@@ -44,6 +51,7 @@
 #define SHRINK_BOTTOM_LEFT '1'
 #define SHRINK_BOTTOM_RIGHT '3'
 #define CONFIRM_CLICK '5'
+#define CONFIRM_RIGHT_CLICK '0'
 #define PRESS_QUIT 'q'
 
 /* transparency
@@ -123,14 +131,25 @@ void shrink_tl_left();
 void shrink_tl_right();
 void shrink_br_left();
 void shrink_br_right();
-void grow_left();
-void grow_right();
-void move_ptr();
+void move_ptr(int click);
 void print_debug();
 
-int 
-main()
+int
+main(int argc, char *argv[])
 {
+	if(argc >= 2)
+    	{
+        	// helpful commands for the users
+	        if(strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
+        	{
+	            fprintf(stdout,"Usage: bmkvp OPTION\n\nOptions are:\n-h or --help: shows this help menu\n-v or --version: shows bmkvp's version information\nDefault controls(Numpad):\n- the arrows will move the grid\n- `7` will shrink the grid in the top left corner\n- `9` will shrink the grid in the top right corner\n- `1` will shrink the grid in the bottom left corner\n- `3` will shrink the grid in the bottom right corner\n- `5` will simulate a pointer click\n- `0` will simulate a right click\n- `q` will exit bmkvp\n");
+		    exit(0);
+	        }else if(strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)
+	        {
+	            fprintf(stdout,"bmkvp %s\nModal keyboard-driven virtual pointer. \nCopyright (C) 2022 Andrei Datcu <https://datcuandrei.github.io>.\nLicensed under MIT: <https://raw.githubusercontent.com/datcuandrei/bmkvp/main/LICENSE>\nVisit <https://github.com/datcuandrei/bmkvp> for more information.\n", VERSION);
+		    exit(0);
+	        }
+	}
 	initx(); 		// connecting to the X server.	
 	char kP[255];		// pressed keys will be inserted in this string.	
 	
@@ -163,63 +182,67 @@ main()
 	attr.border_pixel = COLOR;
 	attr.background_pixel = TRANSPARENCY;
 
-	grid_win = XCreateWindow(
-		dpy,
-		DefaultRootWindow(dpy),
-		x_grid_win,
-		y_grid_win,
-		w_grid_win,
-		h_grid_win,
-		0,
-		vinfo.depth,
-	       	InputOutput,
-	       	vinfo.visual,
-	       	CWColormap | CWBorderPixel | CWBackPixel,
-	       	&attr);
-	top_left = XCreateWindow(
-		dpy,
-		grid_win,
-		x_tl_cd,
-		y_tl_cd,
-		w_tl_cd, 
-		h_tl_cd,
-		1,
-		vinfo.depth,
-	       	InputOutput,
-	       	vinfo.visual,
-	       	CWColormap | CWBorderPixel | CWBackPixel,
-	       	&attr);
+	grid_win = XCreateWindow(dpy,
+				DefaultRootWindow(dpy),
+				x_grid_win,
+				y_grid_win,
+				w_grid_win,
+				h_grid_win,
+				0,
+				vinfo.depth,
+			       	InputOutput,
+			       	vinfo.visual,
+		       		CWColormap | CWBorderPixel | CWBackPixel,
+			       	&attr);
+	
+	top_left = XCreateWindow(dpy,
+				grid_win,
+				x_tl_cd,
+				y_tl_cd,
+				w_tl_cd, 
+				h_tl_cd,
+				1,
+				vinfo.depth,
+			       	InputOutput,
+			       	vinfo.visual,
+			       	CWColormap | CWBorderPixel | CWBackPixel,
+			       	&attr);
 
-	bot_right = XCreateWindow(
-		dpy,
-		grid_win,
-		x_br_cd,
-		y_br_cd,
-		w_br_cd,
-		h_br_cd,
-		1,
-		vinfo.depth,
-	       	InputOutput,
-	       	vinfo.visual,
-	       	CWColormap | CWBorderPixel | CWBackPixel,
-	       	&attr);
+	bot_right = XCreateWindow(dpy,
+				grid_win,
+				x_br_cd,
+				y_br_cd,
+				w_br_cd,
+				h_br_cd,
+				1,
+				vinfo.depth,
+			       	InputOutput,
+			       	vinfo.visual,
+			       	CWColormap | CWBorderPixel | CWBackPixel,
+			       	&attr);
 			
 	display_grid();
-	
+
 	while(1)
 	{
 		XNextEvent(dpy, &ev);
 		KeySym key;
 		
-		XWarpPointer(dpy, NULL , NULL, -1,-1,-1,-1, w_grid_win, w_grid_win); // placing the pointer out of bounds
+		XWarpPointer(dpy, NULL , NULL, -1,-1,-1,-1, w_grid_win, h_grid_win); // placing the pointer out of bounds
 		
 		// if it goes under 0x0, it becomes unstable and bugs out.
-		if (w_grid_win < mod || h_grid_win < mod)
+		if (w_grid_win < 10 || h_grid_win < 10)
 		{
 				destroyx();
 				exit(0);
 		}
 		
+		// setting the input focus on bmkvp
+		XSetInputFocus(dpy,
+		      grid_win,
+		      RevertToParent,
+		      CurrentTime);
+
 		if(ev.type==KeyPress && XLookupString(&ev.xkey, kP, 255, &key,0)==1) {
 			switch(kP[0])
 			{
@@ -248,7 +271,10 @@ main()
 					shrink_br_left();
 					break;
 				case CONFIRM_CLICK:
-					move_ptr();
+					move_ptr(LEFT_CLICK);
+					break;
+				case CONFIRM_RIGHT_CLICK:
+					move_ptr(RIGHT_CLICK);
 					break;
 				case PRESS_QUIT:
 					destroyx();
@@ -290,106 +316,91 @@ void
 display_grid()
 {
 	// the type of input that the grid will accept
-	XSelectInput(
-			dpy, 
-			grid_win, 
-			ButtonPressMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
+	XSelectInput(dpy, 
+		grid_win, 
+		ButtonPressMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
 			
-			// mapping the windows to the display
-			XMapWindow(dpy, grid_win);
-			XMapWindow(dpy, top_left);
-			XMapWindow(dpy, bot_right);
+	// mapping the windows to the display
+	XMapWindow(dpy, grid_win);
+	XMapWindow(dpy, top_left);
+	XMapWindow(dpy, bot_right);
 }
 		
 void
 move_up()
 {
-	XMoveWindow(dpy, grid_win, x_grid_win, y_grid_win -= mod);	
+	XMoveWindow(dpy, grid_win, x_grid_win, y_grid_win -= 1);	
 }
 		
 void
 move_down()
 {
-	XMoveWindow(dpy, grid_win, x_grid_win, y_grid_win += mod);
+	XMoveWindow(dpy, grid_win, x_grid_win, y_grid_win += 1);
 }
 		
 void
 move_left()
 {
-	XMoveWindow(dpy, grid_win, x_grid_win -= mod, y_grid_win);
+	XMoveWindow(dpy, grid_win, x_grid_win -= 1, y_grid_win);
 }
 
 void
 move_right()
 {
-	XMoveWindow(dpy, grid_win, x_grid_win += mod, y_grid_win);
+	XMoveWindow(dpy, grid_win, x_grid_win += 1, y_grid_win);
 }
 		
 void
 shrink_tl_left()
 {
-	XResizeWindow(dpy, grid_win, w_grid_win -= mod, h_grid_win -= mod);
-	XResizeWindow(dpy, top_left, w_tl_cd -= mod, h_tl_cd -= mod);
-	XResizeWindow(dpy, bot_right,  w_br_cd -= mod, h_br_cd -= mod);
-	XMoveWindow(dpy, bot_right, x_br_cd -= mod, y_br_cd -= mod);
-	XResizeWindow(dpy, grid_win,  w_grid_win -= mod, h_grid_win -= mod);
+	XResizeWindow(dpy, grid_win, w_grid_win /= 2, h_grid_win /= 2);
+	XResizeWindow(dpy, top_left, w_tl_cd = w_grid_win/2, h_tl_cd = h_grid_win/2);
+	XResizeWindow(dpy, bot_right,  w_br_cd = w_grid_win/2, h_br_cd = h_grid_win/2);
+	XMoveWindow(dpy, bot_right, x_br_cd = w_grid_win/2, y_br_cd = h_grid_win/2);
 }
 	
 void 
 shrink_tl_right()
 {
 	shrink_tl_left();
-	move_right();
-	move_right();
+	for(int i = 0; i < w_grid_win/2; i++)
+	{
+		move_right();
+		move_right();
+	}
 }
 
 void 
 shrink_br_left()
 {
 	shrink_tl_left();
-	move_down();
-	move_down();
-	move_left();
-	move_left();
+	for(int i = 0; i < h_grid_win/2; i++)
+	{
+		move_down();
+		move_down();
+	}
 }
 
 void 
 shrink_br_right()
 {
-	shrink_tl_left();
-	move_down();
-	move_down();
-	move_right();
-	move_right();
+	shrink_tl_right();
+	for(int i = 0; i < h_grid_win/2; i++)
+	{
+		move_down();
+		move_down();
+	}
 }
 
 void 
-grow_left()
-{
-	XResizeWindow(dpy, grid_win, w_grid_win += mod, h_grid_win += mod);
-	XResizeWindow(dpy, top_left, w_tl_cd += mod, h_tl_cd += mod);				
-	XResizeWindow(dpy, bot_right, w_br_cd += mod, h_br_cd += mod);
-	XMoveWindow(dpy, bot_right, x_br_cd += mod, y_br_cd += mod);
-	XResizeWindow(dpy, grid_win, w_grid_win += mod, h_grid_win += mod);
-}
-
-void
-grow_right()
-{
-	grow_left();
-	move_left();
-	move_left();
-}
-
-void 
-move_ptr()
+move_ptr(int click)
 {
 	XWarpPointer(dpy, NULL , grid_win, 0,0,w_grid_win,h_grid_win, w_grid_win/2, h_grid_win/2);
 	XDestroyWindow(dpy, grid_win);
 	
 	/* the secret to simulating a click */
-	XTestFakeButtonEvent(dpy, 1, true, CurrentTime);
-	XTestFakeButtonEvent(dpy, 1, false, CurrentTime);
+	XTestFakeButtonEvent(dpy, click, true, CurrentTime);
+	XTestFakeButtonEvent(dpy, click, false, CurrentTime);
 	XFlush(dpy);
 	
 	exit(0);
@@ -398,8 +409,8 @@ move_ptr()
 void 
 print_debug()
 {
-	fprintf(stdout, "(grid_win) x:%d, y:%d, w:%d, h:%d\n", x_grid_win, y_grid_win, w_grid_win, h_grid_win);
-	fprintf(stdout, "(top_left) x:%d, y:%d, w:%d, h:%d\n", x_tl_cd, y_tl_cd, w_tl_cd, h_tl_cd);
-	fprintf(stdout, "(bot_right) x:%d, y:%d, w:%d, h:%d\n\n\n", x_br_cd, y_br_cd, w_br_cd, h_br_cd);
+	fprintf(stdout, "[grid_win] x:%d, y:%d, w:%d, h:%d\n", x_grid_win, y_grid_win, w_grid_win, h_grid_win);
+	fprintf(stdout, "[top_left] x:%d, y:%d, w:%d, h:%d\n", x_tl_cd, y_tl_cd, w_tl_cd, h_tl_cd);
+	fprintf(stdout, "[bot_right] x:%d, y:%d, w:%d, h:%d\n\n\n", x_br_cd, y_br_cd, w_br_cd, h_br_cd);
 }
 
